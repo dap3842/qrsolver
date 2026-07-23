@@ -35,11 +35,8 @@
         }
         /* Игровое поле */
         #puzzle-board {
-            width: 320px;
-            height: 320px;
+            /* Размеры и количество колонок устанавливаются через JS */
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(4, 1fr);
             gap: 2px;
             background-color: #30363d;
             border: 3px solid #30363d;
@@ -51,7 +48,6 @@
             width: 100%;
             height: 100%;
             background-image: url('qr.png');
-            background-size: 320px 320px;
             cursor: pointer;
             border-radius: 2px;
             transition: transform 0.1s, border-color 0.1s;
@@ -87,21 +83,18 @@
     <div id="status-msg"></div>
 
     <script>
-        const GRID_SIZE = 6; // 4x4 = 16 кусочков
-        const BOARD_SIZE = 480; // размер поля в px
+        const GRID_SIZE = 6; // Количество ячеек по горизонтали и вертикали
+        const BOARD_SIZE = 360; // Общий размер игрового поля в px (подходит для мобильных экранов)
         const PIECE_SIZE = BOARD_SIZE / GRID_SIZE;
 
         const board = document.getElementById('puzzle-board');
         const statusMsg = document.getElementById('status-msg');
 
-        let pieces = [];
         let selectedPieceIndex = null;
         let isSolved = false;
 
-        // Создаем правильный порядок [0, 1, 2 ... 15]
         let currentOrder = Array.from({length: GRID_SIZE * GRID_SIZE}, (_, i) => i);
 
-        // Функция перемешивания (так, чтобы пазл не был собран сразу)
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -110,10 +103,15 @@
         }
 
         function initGame() {
-            // Перемешиваем
+            // Настраиваем CSS-сетку и размеры поля под параметры из JS
+            board.style.width = `${BOARD_SIZE}px`;
+            board.style.height = `${BOARD_SIZE}px`;
+            board.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
+            board.style.gridTemplateRows = `repeat(${GRID_SIZE}, 1fr)`;
+
             do {
                 shuffle(currentOrder);
-            } while (checkWin()); // Убеждаемся, что случайно не собралось сразу
+            } while (checkWin());
 
             renderBoard();
         }
@@ -125,11 +123,12 @@
                 const piece = document.createElement('div');
                 piece.classList.add('piece');
 
-                // Считываем X и Y позиции из правильного оригинального индекса
+                // Настраиваем размер фонового изображения в соответствие с размером поля
+                piece.style.backgroundSize = `${BOARD_SIZE}px ${BOARD_SIZE}px`;
+
                 const row = Math.floor(originalIndex / GRID_SIZE);
                 const col = originalIndex % GRID_SIZE;
 
-                // Вырезаем нужный кусок из картинки qr.png
                 piece.style.backgroundPosition = `-${col * PIECE_SIZE}px -${row * PIECE_SIZE}px`;
 
                 if (selectedPieceIndex === currentIndex) {
@@ -145,24 +144,20 @@
             if (isSolved) return;
 
             if (selectedPieceIndex === null) {
-                // Первый клик — выбираем деталь
                 selectedPieceIndex = index;
             } else if (selectedPieceIndex === index) {
-                // Клик по той же детали — отменяем выбор
                 selectedPieceIndex = null;
             } else {
-                // Второй клик — меняем детали местами!
                 [currentOrder[selectedPieceIndex], currentOrder[index]] =
                 [currentOrder[index], currentOrder[selectedPieceIndex]];
 
                 selectedPieceIndex = null;
 
-                // Проверяем на победу
                 if (checkWin()) {
                     isSolved = true;
                     statusMsg.innerHTML = '<span class="win-text">✅ QR-КОД ВОССТАНОВЛЕН!</span>';
                     board.style.borderColor = '#3fb950';
-                    board.style.gap = '0px'; // Убираем зазоры для идеального скана
+                    board.style.gap = '0px';
                 }
             }
             renderBoard();
@@ -172,7 +167,6 @@
             return currentOrder.every((val, index) => val === index);
         }
 
-        // Старт
         initGame();
     </script>
 </body>
